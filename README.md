@@ -4,8 +4,8 @@
 ## Anggota Kelompok
 | Nama           | NRP        | Kelas     |
 | ---            | ---        | ----------|
-| Addien Zafriyan Al Akhsan      |            |           |
-| Raden Kurniawan Agung Fitrianto               |            |           |
+| Addien Zafriyan Al Akhsan      | 5025241058           | C           |
+| Raden Kurniawan Agung Fitrianto               | 5025241104           | C          |
 |                |            |           |
 
 ## Link Youtube (Unlisted)
