@@ -4,7 +4,8 @@
 ## Anggota Kelompok
 | Nama           | NRP        | Kelas     |
 | ---            | ---        | ----------|
-|                |            |           |
+| Addien Zafriyan Al Akhsan      |            |           |
+| Raden Kurniawan Agung Fitrianto               |            |           |
 |                |            |           |
 
 ## Link Youtube (Unlisted)
