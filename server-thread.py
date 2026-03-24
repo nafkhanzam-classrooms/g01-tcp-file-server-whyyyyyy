@@ -75,7 +75,7 @@ class ClientThread(threading.Thread):
                                     break
                                 f.write(chunk)
 
-                        self.client.send(b"Upload Completed")
+                        self.client.send(b"Upload Completed : File uploaded successfully")
 
                     except Exception as e:
                         print("[UPLOAD ERROR]", e)
