@@ -54,4 +54,14 @@ server-sync.py merupakan program server yang menghandle permintaan client menggu
   c. handle_request : menghandle seluruh komunikasi dengan satu client secara terus-menerus (loop), menerima data, memproses message, dan menentukan command yang dijalankan. . /list berarti mengambil semua file di folder server dan memberikan informasinya . /upload memberikan sinyal server siap, dan menerima file dari client. /download memberikan sinyal, lalu mengirimkan info file sesuai dengan yang dminta.
   d. ketika client terputus, server akan menghapus client dari daftar dan menutup koneksi. 
 - run : menjalankan server dengan membuat socket, melakukan binding dan listening. Server kemudian menerima koneksi client menggunakan accept(), dan langsung memproses client tersebut dengan handle_client. Karena menggunakan mekanisme blocking, server hanya akan melayani satu client sampai selesai sebelum menerima client berikutnya.
+
+## server-thread.py
+server-sync.py merupakan program server yang menghandle permintaan client menggunakan mekanisme multithreading , yaitu setiap client akan dilayani oleh thread berbeda.
+- Hal yang pertama adalah mengimport library yang dibutuhkan dan membuat folder lokasi files untuk server
+- ClientThread : berisi seluruh logika server
+  a. __init__ : inisialisasi awal program, menentukan host dan port server serta ukuran buffer yang digunakan untuk komunikasi data.  
+  b. broadcast : melakukan inisialisasi thread dengan menyimpan socket client, alamat client, serta ukuran buffer yang digunakan untuk komunikasi data.
+  c. run : bagian utama, menambahkan client ke dalam list global dengan proteksi lock, melakukan loop untuk menerima dan memproses data,  dan menentukan command yang dijalankan. . /list berarti mengambil semua file di folder server dan memberikan informasinya . /upload memberikan sinyal server siap, dan menerima file dari client. /download memberikan sinyal, lalu mengirimkan info file sesuai dengan yang dminta.
+  d. ketika client terputus, server akan menghapus client dari daftar dan menutup koneksi. 
+- run : menjalankan server dengan membuat socket, melakukan binding dan listening. Server kemudian menerima koneksi client menggunakan accept(), dan langsung memproses client tersebut dengan handle_client. Karena menggunakan mekanisme blocking, server hanya akan melayani satu client sampai selesai sebelum menerima client berikutnya.
 ## Screenshot Hasil
