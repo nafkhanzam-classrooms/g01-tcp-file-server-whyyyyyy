@@ -27,12 +27,21 @@ handle_download_stream() berguna untuk menuliskan file kedalam disk, dengan meng
 - main sebagai program utama yang akan menjalankan koneksi pada server dan menjalankan thread receiver dan selalau kondisi masih menyala akan menghandle command yang sesuai. 
 
 ## server-poll.py
-Merupaka program server yang akan menghandle request cleint dengan mekanisme poll yang akan mengecek banyak socket sekaligus tanpa bloking/menunggu satu client
+Merupaka program server yang akan menghandle request cleint dengan menggunakan mekanisme poll, yaitu teknik I/O multiplexing yang memantau banyak socket menggunakan event berbasis file descriptor. Setiap socket (termasuk server dan client) didaftarkan ke dalam poller. Server kemudian akan terus melakukan pengecekan terhadap event yang terjadi, seperti adanya koneksi baru atau data yang masuk dari client.
+Ketika event terjadi, poll akan mengembalikan daftar file descriptor yang aktif beserta jenis event-nya. Server kemudian memproses masing-masing event tersebut.
 - Hal yang pertama adalah mengimport library yang dibutuhkan dan membuat folder lokasi files untuk server
 - Server (class) : semua logic server,  
   a. __init__ : inisialisasi awal program, membuat server jalan dilocalhost dan menyimpan konfigurasi sendiri.   Setelah itu menyimpan socket object berdasarkan FG dan alamat client.  
   b. broadcast : mengirim pesan ke semua client dengan cara looping fd (kecuali sender)  
   c. handle_request : menghandle semua request command dari client, memproses message, menyimpan alamat dan melihat command jenis apa yang ingin dijalankan. /list berarti mengambil semua file di folder server dan memberikan informasinya. /upload memberikan sinyal server siap, menyalakan blocking mode, dan menerima file dari client. /download memberikan sinyal, masuk mode blocking, lalu mengirimkan info file sesuai dengan yang dminta. 
-- run : Membuat socket dan inisialisasi mode non-blocking, memonitor server socket dan menunggu event (client baru, handle command, dan shutdwon.   
-
+- run : Membuat socket dan inisialisasi mode non-blocking, memonitor server socket dan menunggu event (client baru, handle command, dan shutdwon.
+  
+## server-select.py
+server-select.py merupakan program server yang menangani permintaan dari client menggunakan menggunakan mekanisme select, yaitu teknik I/O multiplexing yang memantau banyak socket menggunakan list descriptor dalam batas tertentu. Server akan menyimpan semua socket dalam sebuah list. Server kemudian menggunakan fungsi select untuk mengecek socket mana yang siap digunakan. Ketika select dipanggil, fungsi ini akan mengembalikan daftar socket yang aktif (readable). Server kemudian memproses setiap socket tersebut.
+- Hal yang pertama adalah mengimport library yang dibutuhkan dan membuat folder lokasi files untuk server
+- Server (class) : berisi seluruh logika server
+  a. __init__ : inisialisasi awal program, membuat socket server pada localhost, mengatur mode non-blocking, serta menyimpan daftar socket yang akan dimonitor (inputs) dan daftar client yang terhubung..  
+  b. broadcast : mengirim pesan ke semua client dengan cara looping fd (kecuali sender) dengan melakukan iterasi pada daftar client.  
+  c. handle_request : menghandle semua request command dari client , memproses message, menyimpan alamat, mengganti mode blocking true dan melihat command jenis apa yang ingin dijalankan. /list berarti mengambil semua file di folder server dan memberikan informasinya. /upload memberikan sinyal server siap, dan menerima file dari client. /download memberikan sinyal, lalu mengirimkan info file sesuai dengan yang dminta. 
+- run : menjalankan server dengan melakukan binding dan listening, lalu menggunakan select untuk memonitor banyak socket secara bersamaan, jika ada koneksi baru server akan menerima dan menambahkannya ke daftar monitoring, jika ada data masuk maka akan di handle_request, jika terjadi error, maka akan disconnect, 
 ## Screenshot Hasil
