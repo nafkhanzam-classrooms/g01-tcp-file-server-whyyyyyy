@@ -66,3 +66,10 @@ server-sync.py merupakan program server yang menghandle permintaan client menggu
   d. ketika client terputus, server akan menghapus client dari daftar dan menutup koneksi. 
 - Server : menjalankan server dengan membuat socket, melakukan binding dan listenin. menerima client, membuat objek clientthread dan thread akan dijalankan secara pararel. 
 ## Screenshot Hasil
+
+<img width="1015" height="412" alt="Screenshot 2026-03-25 222242" src="https://github.com/user-attachments/assets/0f416567-eaa6-478d-8b16-29d146b72f2c" />
+<img width="992" height="223" alt="Screenshot 2026-03-25 222252" src="https://github.com/user-attachments/assets/f0c78a96-e51c-44a8-905f-72980347df5e" />
+<img width="975" height="191" alt="Screenshot 2026-03-25 222334" src="https://github.com/user-attachments/assets/5ee895dd-9f77-4f3f-87b1-41bc87785e38" />
+<img width="960" height="277" alt="Screenshot 2026-03-25 222317" src="https://github.com/user-attachments/assets/b40937c5-5120-4fe6-9cd1-6bccb8d0610e" />
+<img width="996" height="280" alt="Screenshot 2026-03-25 222303" src="https://github.com/user-attachments/assets/ffcc10ea-70df-48bb-8c9d-98fcccd27c34" />
+
