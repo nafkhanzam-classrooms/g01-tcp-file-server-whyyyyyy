@@ -128,6 +128,13 @@ def download(sock, filename):
     except:
         print("Download Failed")
 
+def list(sock):
+    try:
+        sock.send("/list".encode())
+        response = sock.recv(SIZE).decode()
+        print("Files on server:\n", response)
+    except:
+        print("Failed to retrieve file list")
 
 def main():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -140,7 +147,14 @@ def main():
     while True:
         msg = input(">> ")
 
-        if msg.startswith("/upload"):
+        if msg.startswith("/list"):
+            parts = msg.split(" ", 1)
+            if len(parts) < 1:
+                print("Invalid command")
+                continue
+            list(sock)
+
+        elif msg.startswith("/upload"):
             parts = msg.split(" ", 1)
             if len(parts) < 2:
                 print("Invalid command")
