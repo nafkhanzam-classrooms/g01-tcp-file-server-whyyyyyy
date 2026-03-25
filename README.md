@@ -39,11 +39,12 @@ Ketika event terjadi, poll akan mengembalikan daftar file descriptor yang aktif 
 ## server-select.py
 server-select.py merupakan program server yang menangani permintaan dari client menggunakan menggunakan mekanisme select, yaitu teknik I/O multiplexing yang memantau banyak socket menggunakan list descriptor dalam batas tertentu. Server akan menyimpan semua socket dalam sebuah list. Server kemudian menggunakan fungsi select untuk mengecek socket mana yang siap digunakan. Ketika select dipanggil, fungsi ini akan mengembalikan daftar socket yang aktif (readable). Server kemudian memproses setiap socket tersebut.
 
-Hal yang pertama adalah mengimport library yang dibutuhkan dan membuat folder lokasi files untuk server
-Server (class) : berisi seluruh logika server a. init : inisialisasi awal program, membuat socket server pada localhost, mengatur mode non-blocking, serta menyimpan daftar socket yang akan dimonitor (inputs) dan daftar client yang terhubung..
-b. broadcast : mengirim pesan ke semua client dengan cara looping fd (kecuali sender) dengan melakukan iterasi pada daftar client.
-c. handle_request : menghandle semua request command dari client , memproses message, menyimpan alamat, mengganti mode blocking true dan melihat command jenis apa yang ingin dijalankan. /list berarti mengambil semua file di folder server dan memberikan informasinya. /upload memberikan sinyal server siap, dan menerima file dari client. /download memberikan sinyal, lalu mengirimkan info file sesuai dengan yang dminta.
-run : menjalankan server dengan melakukan binding dan listening, lalu menggunakan select untuk memonitor banyak socket secara bersamaan, jika ada koneksi baru server akan menerima dan menambahkannya ke daftar monitoring, jika ada data masuk maka akan di handle_request, jika terjadi error, maka akan disconnect,
+- Hal yang pertama adalah mengimport library yang dibutuhkan dan membuat folder lokasi files untuk server
+- Server (class) : berisi seluruh logika server
+  a. init : inisialisasi awal program, membuat socket server pada localhost, mengatur mode non-blocking, serta menyimpan daftar socket yang akan dimonitor (inputs) dan daftar client yang terhubung..
+  b. broadcast : mengirim pesan ke semua client dengan cara looping fd (kecuali sender) dengan melakukan iterasi pada daftar client
+  c. handle_request : menghandle semua request command dari client , memproses message, menyimpan alamat, mengganti mode blocking true dan melihat command jenis apa yang ingin dijalankan. /list berarti mengambil semua file di folder server dan - emberikan informasinya. /upload memberikan sinyal server siap, dan menerima file dari client. /download memberikan sinyal, lalu mengirimkan info file sesuai dengan yang dminta.
+- run : menjalankan server dengan melakukan binding dan listening, lalu menggunakan select untuk memonitor banyak socket secara bersamaan, jika ada koneksi baru server akan menerima dan menambahkannya ke daftar monitoring, jika ada data masuk maka akan di handle_request, jika terjadi error, maka akan disconnect,
 
 ## server-sync.py
 server-sync.py merupakan program server yang menghandle permintaan client menggunakan mekanisme synchronous (blocking), yaitu server hanya menangani satu client dalam satu waktu. Server akan menunggu/blocking hingga client selesai sebelum menerima client berikutnya. 
@@ -63,5 +64,5 @@ server-sync.py merupakan program server yang menghandle permintaan client menggu
   b. broadcast : melakukan inisialisasi thread dengan menyimpan socket client, alamat client, serta ukuran buffer yang digunakan untuk komunikasi data.
   c. run : bagian utama, menambahkan client ke dalam list global dengan proteksi lock, melakukan loop untuk menerima dan memproses data,  dan menentukan command yang dijalankan. . /list berarti mengambil semua file di folder server dan memberikan informasinya . /upload memberikan sinyal server siap, dan menerima file dari client. /download memberikan sinyal, lalu mengirimkan info file sesuai dengan yang dminta.
   d. ketika client terputus, server akan menghapus client dari daftar dan menutup koneksi. 
-- run : menjalankan server dengan membuat socket, melakukan binding dan listening. Server kemudian menerima koneksi client menggunakan accept(), dan langsung memproses client tersebut dengan handle_client. Karena menggunakan mekanisme blocking, server hanya akan melayani satu client sampai selesai sebelum menerima client berikutnya.
+- Server : menjalankan server dengan membuat socket, melakukan binding dan listenin. menerima client, membuat objek clientthread dan thread akan dijalankan secara pararel. 
 ## Screenshot Hasil
