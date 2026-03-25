@@ -1,124 +1,141 @@
 import socket
 import threading
 import os
-import time
+import queue
 
 SERVER_HOST = '127.0.0.1'
 SERVER_PORT = 50000
 SIZE = 1024
-is_busy = False
+
+response_queue = queue.Queue()
+download_event = threading.Event()
+download_info = {}
 
 
-def receive_messages(sock):
-    global is_busy
+def recv_exact(sock, size):
+    data = b""
+    while len(data) < size:
+        chunk = sock.recv(size - len(data))
+        if not chunk:
+            return None
+        data += chunk
+    return data
+
+
+def receiver(sock):
     while True:
         try:
-            if is_busy:
-                time.sleep(0.5)
-                continue
-
             data = sock.recv(SIZE)
             if not data:
                 break
 
+            if download_event.is_set():
+                handle_download_stream(sock, data)
+                continue
+
             if data.startswith(b"MSG:"):
                 print("\n[CHAT]:", data[4:].decode())
+                print(">> ", end="", flush=True)
             else:
-                print("\n[SERVER]:", data.decode())
-
-            print(">> ", end="", flush=True)
+                response_queue.put(data)
 
         except:
             break
 
 
-def upload(sock, filepath):
-    global is_busy
+def handle_download_stream(sock, first_chunk):
+    filename = download_info["filename"]
+    filesize = download_info["filesize"]
 
+    received = len(first_chunk)
+
+    with open(filename, "ab") as f:
+        f.write(first_chunk)
+
+        while received < filesize:
+            chunk = sock.recv(min(SIZE, filesize - received))
+            if not chunk:
+                break
+            f.write(chunk)
+            received += len(chunk)
+
+    print("\nDownload Completed")
+    download_event.clear()
+    print(">> ", end="", flush=True)
+
+
+def upload(sock, filepath):
     if not os.path.exists(filepath):
         print("Upload Failed : File not found")
         return
 
     filename = os.path.basename(filepath)
+    filesize = os.path.getsize(filepath)
 
     try:
-        is_busy = True
-
         sock.send(f"/upload {filename}".encode())
-        response = sock.recv(SIZE)
+
+        response = response_queue.get()
 
         if response.startswith(b"Upload Failed"):
             print(response.decode())
-            is_busy = False
             return
 
         if response == b"READY":
-            print("Upload Started : Uploading file...")
+            print("Uploading...")
+
+            sock.send(filesize.to_bytes(8, 'big'))
 
             with open(filepath, "rb") as f:
-                while True:
-                    chunk = f.read(SIZE)
-                    if not chunk:
-                        break
+                while chunk := f.read(SIZE):
                     sock.send(chunk)
 
-            sock.send(b"__EOF__")
-
-            print(sock.recv(SIZE).decode())
-
-        is_busy = False
+            print(response_queue.get().decode())
 
     except:
-        is_busy = False
         print("Upload Failed : Connection lost")
 
 
 def download(sock, filename):
-    global is_busy
-
     if os.path.exists(filename):
-        print("Download Failed : File already exists")
+        print("Download Failed : File exists")
         return
 
     try:
-        is_busy = True
-
         sock.send(f"/download {filename}".encode())
-        response = sock.recv(SIZE)
+
+        response = response_queue.get()
 
         if response.startswith(b"Download Failed"):
             print(response.decode())
-            is_busy = False
             return
 
         if response == b"READY":
-            print("Download Started : Downloading file...")
+            sock.send(b"READY")
 
-            with open(filename, "wb") as f:
-                while True:
-                    chunk = sock.recv(SIZE)
-                    if b"__EOF__" in chunk:
-                        chunk = chunk.replace(b"__EOF__", b"")
-                        f.write(chunk)
-                        break
-                    f.write(chunk)
+            filesize_data = recv_exact(sock, 8)
+            filesize = int.from_bytes(filesize_data, 'big')
 
-            print("Download Completed : File downloaded successfully")
+            download_info["filename"] = filename
+            download_info["filesize"] = filesize
 
-        is_busy = False
+            open(filename, "wb").close()
+
+            download_event.set()
+
+            print("Downloading...")
 
     except:
-        is_busy = False
-        print("Download Failed : Connection lost")
+        print("Download Failed")
 
 
 def main():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((SERVER_HOST, SERVER_PORT))
 
-    print("Connected to server.")
+    print("Connected to server")
 
-    threading.Thread(target=receive_messages, args=(sock,), daemon=True).start()
+    threading.Thread(target=receiver, args=(sock,), daemon=True).start()
 
     while True:
         msg = input(">> ")
@@ -126,14 +143,14 @@ def main():
         if msg.startswith("/upload"):
             parts = msg.split(" ", 1)
             if len(parts) < 2:
-                print("Upload Failed : Invalid command")
+                print("Invalid command")
                 continue
             upload(sock, parts[1])
 
         elif msg.startswith("/download"):
             parts = msg.split(" ", 1)
             if len(parts) < 2:
-                print("Download Failed : Invalid command")
+                print("Invalid command")
                 continue
             download(sock, parts[1])
 

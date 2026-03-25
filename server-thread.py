@@ -64,19 +64,22 @@ class ClientThread(threading.Thread):
                         continue
 
                     self.client.send(b"READY")
-
+                    
                     try:
+                        filesize_data = self.client.recv(8)
+                        filesize = int.from_bytes(filesize_data, byteorder='big')
+                        
+                        received_bytes = 0
                         with open(filepath, "wb") as f:
-                            while True:
-                                chunk = self.client.recv(self.size)
-                                if b"__EOF__" in chunk:
-                                    chunk = chunk.replace(b"__EOF__", b"")
-                                    f.write(chunk)
+                            while received_bytes < filesize:
+                                to_read = min(self.size, filesize - received_bytes)
+                                chunk = self.client.recv(to_read)
+                                if not chunk:
                                     break
                                 f.write(chunk)
+                                received_bytes += len(chunk)
 
                         self.client.send(b"Upload Completed : File uploaded successfully")
-
                     except Exception as e:
                         print("[UPLOAD ERROR]", e)
                         if os.path.exists(filepath):
@@ -97,15 +100,14 @@ class ClientThread(threading.Thread):
                         continue
 
                     self.client.send(b"READY")
+                    response = self.client.recv(self.size)
+                    
+                    filesize = os.path.getsize(filepath)
+                    self.client.send(filesize.to_bytes(8, byteorder='big'))
 
                     with open(filepath, "rb") as f:
-                        while True:
-                            chunk = f.read(self.size)
-                            if not chunk:
-                                break
+                        while chunk := f.read(self.size):
                             self.client.send(chunk)
-
-                    self.client.send(b"__EOF__")
 
                 # CHAT
                 else:
