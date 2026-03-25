@@ -26,5 +26,13 @@ handle_download_stream() berguna untuk menuliskan file kedalam disk, dengan meng
 - list_files() berguna dengan meminta kepada server daftar file yang dimilikinya lalu menampilkan hasil yang didapat. 
 - main sebagai program utama yang akan menjalankan koneksi pada server dan menjalankan thread receiver dan selalau kondisi masih menyala akan menghandle command yang sesuai. 
 
+## server-poll.py
+Merupaka program server yang akan menghandle request cleint dengan mekanisme poll yang akan mengecek banyak socket sekaligus tanpa bloking/menunggu satu client
+- Hal yang pertama adalah mengimport library yang dibutuhkan dan membuat folder lokasi files untuk server
+- Server (class) : semua logic server,  
+  a. __init__ : inisialisasi awal program, membuat server jalan dilocalhost dan menyimpan konfigurasi sendiri.   Setelah itu menyimpan socket object berdasarkan FG dan alamat client.  
+  b. broadcast : mengirim pesan ke semua client dengan cara looping fd (kecuali sender)  
+  c. handle_request : menghandle semua request command dari client, memproses message, menyimpan alamat dan melihat command jenis apa yang ingin dijalankan. /list berarti mengambil semua file di folder server dan memberikan informasinya. /upload memberikan sinyal server siap, menyalakan blocking mode, dan menerima file dari client. /download memberikan sinyal, masuk mode blocking, lalu mengirimkan info file sesuai dengan yang dminta. 
+- run : Membuat socket dan inisialisasi mode non-blocking, memonitor server socket dan menunggu event (client baru, handle command, dan shutdwon.   
 
 ## Screenshot Hasil
