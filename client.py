@@ -8,18 +8,10 @@ SERVER_PORT = 50000
 SIZE = 1024
 
 response_queue = queue.Queue()
+download_queue = queue.Queue()
+
 download_event = threading.Event()
 download_info = {}
-
-
-def recv_exact(sock, size):
-    data = b""
-    while len(data) < size:
-        chunk = sock.recv(size - len(data))
-        if not chunk:
-            return None
-        data += chunk
-    return data
 
 
 def receiver(sock):
@@ -30,7 +22,7 @@ def receiver(sock):
                 break
 
             if download_event.is_set():
-                handle_download_stream(sock, data)
+                download_queue.put(data)
                 continue
 
             if data.startswith(b"MSG:"):
@@ -43,19 +35,15 @@ def receiver(sock):
             break
 
 
-def handle_download_stream(sock, first_chunk):
+def handle_download_stream():
     filename = download_info["filename"]
     filesize = download_info["filesize"]
 
-    received = len(first_chunk)
+    received = 0
 
     with open(filename, "ab") as f:
-        f.write(first_chunk)
-
         while received < filesize:
-            chunk = sock.recv(min(SIZE, filesize - received))
-            if not chunk:
-                break
+            chunk = download_queue.get()
             f.write(chunk)
             received += len(chunk)
 
@@ -87,7 +75,10 @@ def upload(sock, filepath):
             sock.send(filesize.to_bytes(8, 'big'))
 
             with open(filepath, "rb") as f:
-                while chunk := f.read(SIZE):
+                while True:
+                    chunk = f.read(SIZE)
+                    if not chunk:
+                        break
                     sock.send(chunk)
 
             print(response_queue.get().decode())
@@ -113,7 +104,7 @@ def download(sock, filename):
         if response == b"READY":
             sock.send(b"READY")
 
-            filesize_data = recv_exact(sock, 8)
+            filesize_data = response_queue.get()
             filesize = int.from_bytes(filesize_data, 'big')
 
             download_info["filename"] = filename
@@ -123,18 +114,22 @@ def download(sock, filename):
 
             download_event.set()
 
+            threading.Thread(target=handle_download_stream, daemon=True).start()
+
             print("Downloading...")
 
     except:
         print("Download Failed")
 
-def list(sock):
+
+def list_files(sock):
     try:
         sock.send("/list".encode())
-        response = sock.recv(SIZE).decode()
-        print("Files on server:\n", response)
+        response = response_queue.get().decode()
+        print(response)
     except:
         print("Failed to retrieve file list")
+
 
 def main():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -148,11 +143,7 @@ def main():
         msg = input(">> ")
 
         if msg.startswith("/list"):
-            parts = msg.split(" ", 1)
-            if len(parts) < 1:
-                print("Invalid command")
-                continue
-            list(sock)
+            list_files(sock)
 
         elif msg.startswith("/upload"):
             parts = msg.split(" ", 1)
